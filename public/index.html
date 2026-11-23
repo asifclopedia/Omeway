@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0b0e14">
+<title>Omeway — Anonymous 1-on-1 Interest Chat &amp; Stranger Talk</title>
+<meta name="description" content="Chat 1-on-1 with strangers who share your interests on Omeway. Build a temporary guest profile with zero sign-up, share up to 3 photos daily, or unlock voice notes and filters with Premium.">
+<link rel="canonical" href="https://YOUR-OMEWAY-DOMAIN.com/">
+<link rel="icon" type="image/png" href="/omelogo.png">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Omeway">
+<meta property="og:title" content="Omeway — Anonymous 1-on-1 Interest Chat">
+<meta property="og:description" content="Meet strangers matched by shared interests. Instant guest access with zero email required, plus Premium voice notes and gender/country filters.">
+<meta property="og:url" content="https://YOUR-OMEWAY-DOMAIN.com/">
+<meta property="og:image" content="https://YOUR-OMEWAY-DOMAIN.com/omelogo.png">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Omeway",
+  "url": "https://YOUR-OMEWAY-DOMAIN.com/",
+  "description": "Anonymous 1-on-1 interest-based chat platform with temporary guest profiles, daily photo sharing, and Premium voice notes.",
+  "applicationCategory": "SocialNetworkingApplication",
+  "operatingSystem": "Web",
+  "offers": [
+    { "@type": "Offer", "name": "Omeway Free", "price": "0", "priceCurrency": "USD" },
+    { "@type": "Offer", "name": "Omeway Premium Monthly", "price": "4.99", "priceCurrency": "USD" },
+    { "@type": "Offer", "name": "Omeway Premium Yearly", "price": "29.99", "priceCurrency": "USD" }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="/style.css">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<header class="navbar">
+  <a href="/" class="brand" aria-label="Omeway Home">
+    <img src="/omelogo.png" alt="Omeway Logo" class="brand-logo" width="30" height="30">
+    <span class="brand-name">Omeway</span>
+  </a>
+  <div class="nav-right">
+    <span class="online-pill"><span class="pulse-dot"></span><span id="onlineCount">1</span> online</span>
+    <button type="button" class="btn-ghost-sm" id="navPremiumBtn">Premium</button>
+    <button type="button" class="btn-ghost-sm" id="navEditProfileBtn" hidden>Edit Profile</button>
+  </div>
+</header>
+
+<!-- =========================================================
+     VIEW 1: CRAWLABLE SEO LANDING & 3-OPTION GATEWAY
+========================================================= -->
+<main id="gatewayView" class="container fade-in">
+  <section class="hero-card glass-card">
+    <div class="hero-badge">1-on-1 Interest Matchmaking • 18+</div>
+    <h1>Talk to strangers who actually share your vibe.</h1>
+    <p class="hero-sub">
+      Jump straight in as a guest with zero email—your temporary profile clears automatically when you leave—or sign in with Email OTP to keep your unique username forever.
+    </p>
+
+    <!-- Cloudflare Turnstile Captcha -->
+    <div class="captcha-wrap">
+      <div id="turnstileWidget"></div>
+      <p class="field-hint" id="captchaStatus">Complete security check to continue</p>
+    </div>
+
+    <!-- 3 Starting Options -->
+    <div class="gateway-actions">
+      <button type="button" class="btn-primary btn-lg" id="btnGuest">Continue as Guest</button>
+      <div class="gateway-row">
+        <button type="button" class="btn-secondary" id="btnLogin">Log In</button>
+        <button type="button" class="btn-secondary" id="btnSignup">Sign Up</button>
+      </div>
+    </div>
+    <div class="error-banner" id="gatewayError" role="alert" hidden></div>
+  </section>
+
+  <!-- Crawlable Feature Overview for Search Engines & Visitors -->
+  <section class="features-grid" aria-label="Omeway Features">
+    <article class="feature-item glass-card">
+      <h2>Zero-Trace Guest Profiles</h2>
+      <p>Pick a unique username, write a short bio, choose from 12 custom avatars, and add multiple interest tags. Leave the tab and your guest data vanishes.</p>
+    </article>
+    <article class="feature-item glass-card">
+      <h2>3 Daily Photos &amp; Voice Notes</h2>
+      <p>Share up to 3 compressed images per day for free, or unlock higher limits, 30-second voice notes, and Gender &amp; Country filters with Omeway Premium.</p>
+    </article>
+    <article class="feature-item glass-card">
+      <h2>Active Community Safety</h2>
+      <p>Protected by Captcha and automated moderation. Accounts or IPs reported 3 times receive an automatic 7-day ban (10-report threshold for Premium).</p>
+    </article>
+  </section>
+</main>
+
+<!-- =========================================================
+     VIEW 2: GUEST PROFILE BUILDER (EPHEMERAL SESSIONSTORAGE)
+========================================================= -->
+<section id="profileView" class="container fade-in" hidden>
+  <form id="profileForm" class="glass-card profile-card" novalidate>
+    <div class="card-header-row">
+      <div>
+        <h2 id="profileFormTitle">Create Guest Profile</h2>
+        <p class="muted-sm">Stored in session only — clears automatically when you close this tab.</p>
+      </div>
+      <button type="button" class="btn-icon-close" id="closeProfileBtn" aria-label="Close" hidden>&times;</button>
+    </div>
+
+    <!-- Unique Username -->
+    <div class="form-group">
+      <label for="profileUsername">Unique Username <span class="req">*</span></label>
+      <div class="input-with-status">
+        <input id="profileUsername" type="text" maxlength="20" placeholder="e.g. night_owl_42" autocomplete="off" spellcheck="false" required>
+        <span id="usernameStatus" class="status-tag">3–20 chars</span>
+      </div>
+    </div>
+
+    <!-- Editable Bio -->
+    <div class="form-group">
+      <div class="label-row">
+        <label for="profileBio">Bio</label>
+        <span class="char-count" id="bioCount">0/160</span>
+      </div>
+      <textarea id="profileBio" rows="2" maxlength="160" placeholder="Write a quick line about yourself..."></textarea>
+    </div>
+
+    <!-- 12 Preset Avatars from /omeavatar/ -->
+    <div class="form-group">
+      <label>Select Avatar</label>
+      <div class="avatar-grid" id="avatarGrid" role="radiogroup" aria-label="Choose an avatar"></div>
+    </div>
+
+    <!-- Multiple Interests -->
+    <div class="form-group">
+      <label for="interestInput">Interests (up to 8)</label>
+      <div class="tag-box" id="tagBox">
+        <div id="selectedTags" class="pill-list"></div>
+        <input id="interestInput" type="text" maxlength="20" placeholder="Type an interest &amp; press Enter...">
+      </div>
+      <div class="quick-tags" id="quickTags">
+        <button type="button" class="chip" data-tag="coding">+ coding</button>
+        <button type="button" class="chip" data-tag="music">+ music</button>
+        <button type="button" class="chip" data-tag="physics">+ physics</button>
+        <button type="button" class="chip" data-tag="movies">+ movies</button>
+        <button type="button" class="chip" data-tag="gaming">+ gaming</button>
+        <button type="button" class="chip" data-tag="books">+ books</button>
+      </div>
+    </div>
+
+    <div class="error-banner" id="profileError" role="alert" hidden></div>
+
+    <button type="submit" class="btn-primary btn-lg" id="saveProfileBtn">Start Matching</button>
+  </form>
+</section>
+
+<section id="matchingView" class="container matching-screen fade-in" hidden>
+  <!-- Top-to-Middle: Searching Status & 2 Interactive Filter Blocks -->
+  <div class="matching-top glass-card">
+    <div class="search-radar">
+      <span class="radar-spinner" id="searchSpinner"></span>
+      <div>
+        <h2 id="searchHeading">Finding a stranger...</h2>
+        <p class="muted-sm" id="searchSubtext">Matching based on your interests</p>
+      </div>
+    </div>
+
+    <div class="filter-blocks-grid">
+      <button type="button" class="filter-block" id="openGenderFilterBtn">
+        <span class="filter-block-icon">⚧</span>
+        <div class="filter-block-info">
+          <span class="filter-block-label">Gender Filter</span>
+          <strong class="filter-block-val" id="genderFilterValue">Any • Tap to filter</strong>
+        </div>
+        <span class="lock-mini">PRO</span>
+      </button>
+
+      <button type="button" class="filter-block" id="openCountryFilterBtn">
+        <span class="filter-block-icon">🌍</span>
+        <div class="filter-block-info">
+          <span class="filter-block-label">Country Filter</span>
+          <strong class="filter-block-val" id="countryFilterValue">Any • Tap to filter</strong>
+        </div>
+        <span class="lock-mini">PRO</span>
+      </button>
+    </div>
+
+    <div class="matching-actions">
+      <button type="button" class="btn-secondary" id="editFromMatchBtn">Edit Profile &amp; Interests</button>
+      <button type="button" class="btn-ghost" id="cancelMatchBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Middle-to-Bottom: Reserved Ad Space -->
+  <aside class="ad-slot-box" id="matchingAdSlot" aria-label="Advertisement space">
+    <span class="ad-slot-tag">Advertisement</span>
+    <div class="ad-slot-placeholder"></div>
+  </aside>
+</section>
+
+<section id="chatView" class="chat-shell" hidden>
+  <!-- Filter & Action Bar -->
+  <div class="chat-toolbar">
+    <div class="chat-status-label">
+      <span class="pulse-dot"></span>
+      <span>1-on-1 Live Chat</span>
+    </div>
+
+    <div class="room-controls">
+      <button type="button" class="btn-danger-sm" id="reportBtn" disabled>Report</button>
+      <button type="button" class="btn-next" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+  <!-- Stranger Profile Banner -->
+  <div id="partnerBanner" class="partner-banner" hidden>
+    <img id="partnerAvatar" src="/omeavatar/1.jpg" alt="Stranger Avatar" class="avatar-md">
+    <div class="partner-meta">
+      <div class="partner-top">
+        <strong id="partnerName">@stranger</strong>
+        <span class="badge-guest">Connected</span>
+      </div>
+      <p id="partnerBio" class="partner-bio"></p>
+      <div id="sharedTags" class="pill-list"></div>
+    </div>
+  </div>
+
+  <!-- Message Feed -->
+  <div id="feed" class="chat-feed" aria-live="polite"></div>
+
+  <!-- Typing Indicator -->
+  <div id="typingRow" class="typing-row" hidden>
+    <span id="typingUser">Stranger</span> is typing
+    <span class="typing-dots"><i></i><i></i><i></i></span>
+  </div>
+
+  <!-- Composer Bar -->
+  <div class="composer-bar">
+    <button type="button" class="icon-btn" id="imgBtn" aria-label="Share picture (3 per day free)" title="Share picture">
+      📷 <span class="quota-badge" id="photoQuotaBadge">3/3</span>
+    </button>
+    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+
+    <button type="button" class="icon-btn locked-feature" id="voiceBtn" aria-label="Send voice note (Premium)" title="Voice Note (Premium)">
+      🎤 <span class="lock-mini">PRO</span>
+    </button>
+
+    <input id="msgInput" type="text" maxlength="500" placeholder="Say hello..." autocomplete="off" enterkeyhint="send" disabled>
+    <button type="button" class="btn-primary btn-send" id="sendBtn" disabled>Send</button>
+  </div>
+</section>
+
+<!-- =========================================================
+     MODAL 1: PREMIUM LOCK POPUP ("This feature is only available in Premium")
+========================================================= -->
+<div id="premiumModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="premiumTitle" hidden>
+  <div class="modal-card glass-card pop-in">
+    <button type="button" class="btn-icon-close modal-x" id="closePremiumModal" aria-label="Close and resume searching">&times;</button>
+
+    <!-- Free/Guest View: Buy Premium Card -->
+    <div id="premiumPaywallBox">
+      <div class="premium-icon">👑</div>
+      <h3 id="premiumTitle">This feature is only available in Premium</h3>
+      <p class="modal-desc" id="premiumReason">
+        Upgrade to Omeway Premium to unlock Gender &amp; Country filters, Voice Notes, 50 daily photo shares, and 10-report account protection.
+      </p>
+
+      <div class="plan-cards">
+        <div class="plan-card">
+          <span class="plan-name">Monthly</span>
+          <strong class="plan-price">$4.99<span>/mo</span></strong>
+          <span class="plan-note">Pay via UPI or PayPal</span>
+        </div>
+        <div class="plan-card plan-featured">
+          <span class="plan-badge">Save 50%</span>
+          <span class="plan-name">Yearly</span>
+          <strong class="plan-price">$29.99<span>/yr</span></strong>
+          <span class="plan-note">Pay via UPI or PayPal</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-primary btn-lg" id="checkoutPreviewBtn">Unlock with UPI / PayPal</button>
+      </div>
+    </div>
+
+    <!-- Premium Tier View: Actual Gender / Country Selector (Phase 3 Ready) -->
+    <div id="activeFilterBox" hidden>
+      <h3 id="activeFilterTitle">Select Filter</h3>
+      <p class="modal-desc">Choose your preference, then click &times; to resume searching.</p>
+
+      <div id="genderOptionsWrap" class="filter-options-grid" hidden>
+        <button type="button" class="btn-secondary" data-gender="any">Any Gender</button>
+        <button type="button" class="btn-secondary" data-gender="male">Male</button>
+        <button type="button" class="btn-secondary" data-gender="female">Female</button>
+        <button type="button" class="btn-secondary" data-gender="other">Other</button>
+      </div>
+
+      <div id="countryOptionsWrap" class="filter-options-grid" hidden>
+        <button type="button" class="btn-secondary" data-country="any">Any Country</button>
+        <button type="button" class="btn-secondary" data-country="US">United States</button>
+        <button type="button" class="btn-secondary" data-country="GB">United Kingdom</button>
+        <button type="button" class="btn-secondary" data-country="IN">India</button>
+        <button type="button" class="btn-secondary" data-country="CA">Canada</button>
+        <button type="button" class="btn-secondary" data-country="DE">Germany</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     MODAL 2: EMAIL OTP AUTH PREVIEW (PHASE 2 HOOK)
+========================================================= -->
+<div id="authModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+  <div class="modal-card glass-card pop-in">
+    <button type="button" class="btn-icon-close modal-x" id="closeAuthModal" aria-label="Close">&times;</button>
+    <img src="/omelogo.png" alt="Omeway" class="modal-logo" width="36" height="36">
+    <h3 id="authModalTitle">Save Your Omeway Profile</h3>
+    <p class="modal-desc">
+      Verify your email with a 6-digit OTP to save your unique username, bio, avatar, and Premium status permanently.
+    </p>
+    <form id="otpPreviewForm" class="auth-form">
+      <input id="authEmailInput" type="email" placeholder="you@example.com" required>
+      <button type="submit" class="btn-primary btn-lg">Send Verification OTP</button>
+    </form>
+    <p class="auth-status-note" id="authStatusNote" hidden></p>
+    <button type="button" class="btn-secondary btn-lg" id="authFallbackGuestBtn">Continue as Guest Now (No Sign-In)</button>
+  </div>
+</div>
+
+<!-- =========================================================
+     MODAL 3: IP BAN NOTICE (7-DAY BAN AFTER 3 REPORTS)
+========================================================= -->
+<div id="banModal" class="modal-backdrop" role="dialog" aria-modal="true" hidden>
+  <div class="modal-card glass-card pop-in">
+    <div class="premium-icon">⛔</div>
+    <h3>Access Temporarily Suspended</h3>
+    <p class="modal-desc" id="banMessage">
+      Your IP address has received 3 community reports and is suspended for 7 days.
+    </p>
+  </div>
+</div>
+
+<!-- Image Lightbox & Toast -->
+<div id="lightbox" class="lightbox" hidden><img alt="Shared photo preview"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<footer class="site-footer">
+  <span>&copy; 2026 Omeway. 18+ Only.</span>
+  <nav aria-label="Legal">
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html">Terms</a>
+    <a href="/refunds.html">Refunds</a>
+  </nav>
+</footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/client.js"></script>
+</body>
+</html>
